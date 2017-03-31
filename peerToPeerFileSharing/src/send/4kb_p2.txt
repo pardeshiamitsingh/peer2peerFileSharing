@@ -1,0 +1,45 @@
+Binding a Client to a Server
+To allow a client to call a server, it is necessary that the server be registered
+and prepared to accept incoming calls. Registration of a server makes it possible
+for a client to locate the server and bind to it. Server location is done in two steps:
+1. Locate the server's machine.
+2. Locate the server (i.e., the correct process) on that machine.
+The second step is somewhat subtle. Basically, what it comes down to is that to
+communicate with a server, the client needs to know an end point, on the server's
+machine to which it can send messages. An end point (also commonly known as a
+port) is used by the server's operating system to distinguish incoming messages
+for different processes. In DCE, a table of (server, end point)pairs is maintained
+on each server machine by a process called the DCE daemon. Before it becomes
+available for incoming requests, the server must ask the operating system for an
+end point. It then registers this end point with the DCE daemon. The DCE daemon
+records this information (including which protocols the server speaks) in the end
+point table for future use.
+The server also registers with the directory service by providing it the network
+address of the server's machine and a name under which the server can be looked
+up. Binding a client to a server then proceeds as shown in Fig. 4-13.
+Let us assume that the client wants to bind to a video server that is locally
+known under the name /local/multimedia/video/movies .. It passes this name to the
+directory server, which returns the network address of the machine running the
+video server. The client then goes to the DCE daemon on that machine (which has
+a well-known end point), and asks it to look up the end point of the video server in
+its end point table. Armed with this information, the RPC can now take place. On
+subsequent RPCs this lookup is not needed. DCE also gives clients the ability to
+do more sophisticated searches for a suitable server when that is needed. Secure
+RPC is also an option where confidentiality or data integrity is crucial.
+140 COMMUNICA nON CHAP. 4
+Performing an RPC
+The actual RPC is carried out transparently and in the usual way. The client
+stub marshals the parameters to the runtime library for transmission using the protocol
+chosen at binding time. When a message arrives at the server side, it is
+routed to the correct server based on the end point contained in the incoming message.
+The runtime library passes the message to the server stub, which unmarshals
+the parameters and calls the server. The reply goes back by the reverse route.
+DCE provides several semantic options. The default is at-most-once operation,
+in which case no call is ever carried out more than once, even in the face of
+system crashes. In practice, what this means is that if a server crashes during, an
+RPC and then recovers quickly, the client does not repeat the operation, for fear
+that it might already have been carried out once.
+Alternatively, it is possible to mark a remote procedure as idempotent (in the
+IDL file), in which case it can be repeated multiple times without harm. For example,
+reading a specified block from a file can be tried over and over until it
+succeeds. W

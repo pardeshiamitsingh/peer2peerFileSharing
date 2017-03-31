@@ -1,0 +1,127 @@
+A potential performance problem with this scheme is that it may take a relatively
+long time before the process that initiated the update is allowed to continue.
+In effect, an update is implemented as a blocking operation. An alternative is to
+use a nonblocking approach. As soon as the primary has updated its local copy of
+x, it returns an acknowledgment. After that, it tells the backup servers to perform
+the update as well. Nonblocking primary-backup protocols are discussed in
+Budhiraja and Marzullo (1992).
+The main problem with nonblocking primary-backup protocols has to do with
+fault tolerance. In a blocking scheme, the client process knows for sure that the
+update operation is backed up by several other servers. This is not the case with a
+nonblocking solution. The advantage, of course, is that write operations may
+speed up considerably. We will return to fault tolerance issues extensively in the
+next chapter.
+Primary-backup protocols provide a straightforward implementation of sequential
+consistency, as the primary can order all incoming writes in a globally
+unique time order. Evidently, all processes see all write operations in the same
+order, no matter which backup server they use to perform read operations. Also,
+with blocking protocols, processes will always see the effects of their most recent
+write operation (note that this cannot be guaranteed with a nonblocking protocol
+without taking special measures).
+310 CONSISTENCY AND REPLICA nON CHAP. 7
+Local- Write Protocols
+A variant of primary-backup protocols is one in which the primary copy
+migrates between processes that wish to perform a write operation. As before,
+whenever a process wants to update data item x, it locates the primary copy of x,
+and subsequently moves it to its own location, as shown in Fig. 7-21. The main advantage
+of this approach is that multiple, successive write operations can be carried
+out locally, while reading processes can still access their local copy. However,
+such an improvement can be achieved only if a nonblocking protocol is followed
+by which updates are propagated to the replicas after the primary has finished
+with locally performing the updates.
+Figure 7-21. Primary-backup protocol in which the primary migrates to the
+process wanting to perform an update.
+This primary-backup local-write protocol can also be applied to mobile computers
+that are able to operate in disconnected mode. Before disconnecting, the
+mobile computer becomes the primary server for each data item it expects to update.
+While being disconnected, all update operations are carried out locally.
+while other processes can still perform read operations (but no updates). Later.
+when connecting again, updates are propagated from the primary to the backups.
+bringing the data store in a consistent state again. We will return to operating in
+disconnected mode in Chap. 11 when we discuss distributed file systems.
+As a last variant of this scheme, nonblocking local-write primary-based protocols
+are also used for distributed file systems in general. In this case, there may be
+a fixed central server through which normally all write operations take place, as in
+the case of remote-write primary backup. However, the server temporarily allows
+one of the replicas to perform a series of local updates, as this may considerably
+SEC. 7.5 CONSISTENCY PROTOCOLS 311
+speed up performance. When the replica server is done, the updates are propagated
+to the central server, from where they are then distributed to the other replica
+servers.
+7.5.3 Replicated-Write Protocols
+In replicated-write protocols, write operations can be carried out at multiple
+replicas instead of only one, as in the case of primary-based replicas. A distinction
+can be made between active replication, in which an operation is forwarded to all
+replicas, and consistency protocols based on majority voting.
+Active Replication
+In active replication, each replica has an associated process that carries out
+update operations. In contrast to other protocols, updates are generally propagated
+by means of the write operation that causes the update. In other words, the operation
+is sent to each replica. However, it is also possible to send the update, as discussed
+before.
+One problem with active replication is that operations need to be carried out
+in the same order everywhere. Consequently, what is needed is a totally-ordered
+multicast mechanism. Such a multicast can be implemented using Lamport's logical
+clocks, as discussed in the previous chapter. Unfortunately, this implementation
+of multicasting does not scale well in large distributed systems. As an alternative,
+total ordering can be achieved using a central coordinator, also called a sequencer.
+One approach is to first forward each operation to the sequencer, which
+assigns it a unique sequence number and subsequently forwards the operation to
+all replicas. Operations are carried out in the order of their sequence number.
+Clearly, this implementation of totally-ordered multicasting strongly resembles
+primary-based consistency protocols.
+Note that using a sequencer does not solve the scalability problem. In fact, if
+totally-ordered multicasting is needed, a combination of symmetric multicasting
+using Lamport timestamps and sequencers may be necessary. Such a solution is
+described in Rodrigues et al. (1996).
+Quorum-Based Protocols
+A different approach to supporting replicated writes is to use voting as originally
+proposed by Thomas (1979) and generalized by Gifford (1979). The basic
+idea is to require clients to request and acquire the permission of multiple servers
+before either reading or writing a replicated data item.
+As a simple example of how the algorithm works, consider a distributed file
+system and suppose that a file is replicated on N servers. We could make a rule
+stating that to update a file, a client must first contact at least half the servers plus
+312 CONSISTENCY AND REPLICATION CHAP. 7
+one (a majority) and get them to agree to do the update. Once they have agreed,
+the file is changed and a new version number is associated with the new file. The
+version number is used to identify the version of the file and is the same for all the
+newly updated files.
+To read a replicated file, a client must also contact at least half the servers
+plus one and ask them to send the version numbers associated with the file. If all
+the version numbers are the same, this must be the most recent version because 'an
+attempt to update only the remaining servers would fail because there are not
+enough of them.
+For examplecrashes.RELIABLE CLIENT-SERVER COMMUNICATION 341
+In short, the possibility of server crashes radically changes the nature of RPC
+and clearly distinguishes single-processor systems from distributed systems. In the
+former case, a server crash also implies a client crash, so recovery is neither possible
+nor necessary. In the latter it is both possible and necessary to take action.
+Lost Reply Messages
+Lost replies can also be difficult to deal with. The obvious solution is just to
+rely on a timer again that has been set by the client's operating system. If no reply
+is forthcoming within a reasonable period, just send the request once more. The
+trouble with this solution is that the client is not really sure why there was no answer.
+Did the request or reply get lost, or is the server merely slow? It may make a
+difference.
+In particular, some operations can safely be repeated as often as necessary
+with no damage being done. A request such as asking for the first 1024 bytes of a
+file has no side effects and can be executed as often as necessary without any
+harm being done. A request that has this property is said to be idempotent.
+Now consider a request to a banking server asking to transfer a million dollars
+from one account to another
+difference.
+In particular, some operations can safely be repeated as often as necessary
+with no damage being done. A request such as asking for the first 1024 bytes of a
+file has no side effects and can be executed as often as necessary without any
+harm being done. A request that has this property is said to be idempotent.
+Now consider a request to a banking server asking to transfer a million dollars
+from one account to another
+
+difference.
+In particular, some operations can safely be repeated as often as necessary
+with no damage being done. A request such as asking for the first 1024 bytes of a
+file has no side effects and can be executed as often as necessary without any
+harm being done. A request that has this property is said to be idempotent.
+Now consider a request to a banking server asking to transfer a million dollars
+from one account to another

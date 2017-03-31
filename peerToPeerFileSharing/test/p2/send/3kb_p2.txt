@@ -1,0 +1,43 @@
+Wikipedia has several types of pages which provide content in a non-prose form, for reference purposes.
+
+List pages
+List pages enumerate items of a particular type, such as the List of sovereign states or List of South Africans. Wikipedia has "lists of lists" when there are too many items to fit on a single page, when the items can sorted in different ways, or as a way of navigating lists on a topic (for example Lists of countries and territories or Lists of people). There are several ways to find lists:
+
+Portal:Contents/Lists – A limited single-page collection of lists and lists of lists
+List of lists of lists – A broad single-page collection of lists of lists
+Category:Lists – Browse lists comprehensively via the multi-page Wikipedia category system
+Timelines
+Timelines list events chronologically, sometimes including links to articles with more detail. There are several ways to find timelines:
+
+List of timelines has a long single-page collection
+Category:Timelines has a comprehensive multi-page collection via the Wikipedia category system
+Of particular interest may be:
+
+List of centuries
+List of decades
+List of historical anniversaries—e.g. events on January 1 of any year
+2017—major events this year
+Portal:Current events—featured current events and related project activities
+Deaths in 2017—lists notable people who died this year
+Category:Graphical timelines—graphical timelines in the category and subcategories, arranged alphabetically
+Glossaries
+Glossaries are lists of terms with definitions. Wikipedia includes hundreds of alphabetical glossaries; they can be found two ways:
+
+Portal:Contents/Gloss
+
+Portals
+Portals include featured articles, images, news, categories, excerpts of key articles, links to related portals, and to-do lists for editors. There are two ways to find portals:
+
+Portal:Contents/Portals – A single-page list of portals
+Category:Portals – Browse portals comprehensively via the Wikipedia category system
+Wikipedia books
+ome general information about the spoken article technology
+Collections of articles
+Category system
+Wikipedia's collection of category pages is a classified index system. It is automatically generated from category tags at the bottoms of articles and most other pages. Nearly all of the articles available so far on the website can be found through these subject indexes.
+
+If you are simply looking to browse articles by topic, there are three top-level pages to choose from:
+
+Category:Main topic classifications—probably what you are looking for: Arts, History, Technology, etc.
+Portal:Contents/Categories—a hand-crafted list of first- and second-level topic categories
+For biographies, see Category:People.

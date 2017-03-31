@@ -1,0 +1,143 @@
+Note that there is a trade-off between maintaining fine-grained and coarsegrained
+conits. If a conit represents a lot of data, such as a complete database,
+then updates are aggregated for all the data in the conit. As a consequence, this
+DATA-CENTRIC CONSISTENCY MODELS
+280
+may bring replicas sooner in an inconsistent state. For example, assume that in
+Fig. 7-3 two replicas may differ in no more than one outstanding update. In that
+case, when the data items in Fig. 7-3(a) have each been updated once at the first
+replica, the second one will need to be updated as well. This is not the case when
+choosing a smaller conit, as shown in Fig. 7-3(b). There, the replicas are still considered
+to be up to date. This problem is particularly important when the data
+items contained in a conit are used completely independently, in which case they
+are said to falsely share the conit.
+Figure 7-3. Choosing the appropriate granularity for a conit. (a) Two updates
+lead to update propagation. (b) No update propagation is needed (yet).
+Unfortunately, making conits very small is not a good idea, for the simple reason
+that the total number of conits that need to be managed grows as well. In other
+words, there is an overhead related to managing the conits that needs to be taken
+into account. This overhead, in tum, may adversely affect overall performance,
+which has to be taken into account.
+Although from a conceptual point of view conits form an attractive means for
+capturing consistency requirements, there are two important issues that need to be
+dealt with before they can be put to practical use. First, in order to enforce consistency
+we need to have protocols. Protocols for continuous consistency are discussed
+later in this chapter.
+A second issue is that program developers must specify the consistency requirements
+for their applications. Practice indicates that obtaining such require-
+-ments may be extremely difficult. Programmers are generally not used to handling
+replication, let alone understanding what it means to provide detailed information
+on consistency. Therefore, it is mandatory that there are simple and easy-to-understand
+programming interfaces.
+Continuous consistency can be implemented as a toolkit which appears to programmers
+as just another library that they link with their applications. A conit is
+simply declared alongside an update of a data item. For example, the fragment of
+pseudocode
+AffectsConit(ConitQ, 1, 1);
+append message m to queue Q;
+CONSISTENCY AND REPLICA nON CHAP. 7
+SEC. 7.2 DATA-CENTRIC CONSISTENCY MODELS 281
+states that appending a message to queue Q belongs to a conit named ""ConitQ."
+Likewise, operations may now also be declared as being dependent on conits:
+DependsOnConit(ConitQ, 4, 0, 60);
+read message m from head of queue Q;
+In this case, the call to DependsOnConitO specifies that the numerical deviation,
+ordering deviation, and staleness should be limited to the values 4, 0, and 60 (seconds),
+respectively. This can be interpreted as that there should be at most 4
+unseen update operations at other replicas, there should be no tentative local
+updates, and the local copy of Q should have been checked for staleness no more
+than 60 seconds ago. If these requirements are not fulfilled, the underlying
+middle ware will attempt to bring the local copy of Q to a state such that the read
+operation can be carried out.
+7.2.2 Consistent Ordering of Operations
+Besides continuous consistency, there is a huge body of work on data-centric
+consistency models from the past decades. An important class of models comes
+from the field of concurrent programming. Confronted with the fact that in parallel
+and distributed computing multiple processes will need to share resources and
+access these resources simultaneously, researchers have sought to express the
+semantics of concurrent accesses when shared resources are replicated. This has
+led to at least one important consistency model that is widely used. In the following,
+we concentrate on what is known as sequential consistency, and we will also
+discuss a weaker variant, namely causal consistency.
+The models that we discuss in this section all deal with consistently ordering
+operations on shared, replicated data. In principle, the models augment those of
+continuous consistency in the sense that when tentative updates at replicas need to
+be committed, replicas will need to reach agreement on a global ordering of those
+updates. In other words, they need to agree on a consistent ordering of those
+updates. The consistency models we discuss next are all about reaching such consistent
+orderings.
+Sequential Consistency
+In the following, we will use a special notation in which we draw the operations
+of a process along a time axis. The time axis is always drawn horizontally,
+with time increasing from left to right. The symbols
+mean that a write by process P; to data item x with the value a and a read from
+that item by Pi returning b have been done, respectively. We assume that each
+data item is initially NIL. When there is no confusion concerning which process is
+accessing data, we omit the index from the symbols Wand R.
+282 CONSISTENCY AND REPLICATION CHAP. 7
+As an example, in Fig. 7-4 PI does a write to a data item x, modifying its value
+to a. Note that, in principle, this operation WI (x)a is first performed on a copy
+of the data store that is local to PI, and is then subsequently propagated to the
+other local copies. In our example, P2 later reads the value NIL, and some time
+after that a (from its local copy of the store). What we are seeing here is that it
+took some time to propagate the update of x to P2, which is perfectly acceptable.
+Sequential consistency is an important data-centric consistency model,
+which was first defined by Lamport (1979) in the context of shared memory for
+multiprocessor systems. In general, a data store is said to be sequentially consistent
+when it satisfies the following condition:
+The result of any execution is the same as if the (read and write) operations
+by all processes on the data store were executed in some sequential
+order and the operations of-each individual process appear in this sequence
+in the order specified by its program.
+What this definition means is that when processes run concurrently on (possibly)
+different machines, any valid interleaving of read and write operations is
+acceptable behavior, but all processes see the same interleaving of operations.
+Note that nothing is said about time; that is, there is no reference to the "most
+recent" write operation on a data item. Note that in this context, a process "sees"
+writes from all processes but only its own reads.
+That time does not playa role can be seen from Fig. 7-5. Consider four processes
+operating on the same data item x. In Fig. 7-5(a) process PI first performs
+W(x)a to x. Later (in absolute time), process P2 also performs a write operation,
+by setting the value of x to b. However, both processes P3 and P4 first read value
+b, and later value a. In other words, the write operation of process P2 appears to
+have taken place before that of PI·
+In contrast, Fig.7-5(b) violates sequential consistency because not all processes
+see the same interleaving of write operations. In particular, to process P3, it
+appears as if the data item has first been changed to b, and later to a. On the other
+hand, P4 will conclude that the final value is b.
+To make the notion of sequential consistency more concrete, consider three
+concurrently-executing processes PI, P2, and P3, shown in Fig. 7-6 (Dubois et aI.,
+1988). The data items in this example are formed by the three integer variables x,
+y, and z, which are stored in a (possibly distributed) shared sequentially consistent
+Figure 7-4. Behavior of two processes operating on the same data item. The
+horizontal axis is time.
+SEC. 7.2 DATA-CENTRIC CONSISTENCY MODELS 283
+Figure 7-5. (a) A sequentially consistent data store. (b) A data store that is not
+sequentially consistent.
+Figure 7-6. Three concurrently-executing processes.
+data store. We assume that each variable is initialized to O. In this example, an
+assignment corresponds to a write operation, whereas a print statement corresponds
+to a simultaneous read operation of its two arguments. All statements are
+assumed to be indivisible.
+Various interleaved execution sequences are possible. With six independent
+statements, there are potentially 720 (6!) possible execution sequences, although
+some of these violate program order. Consider the 120 (5!) sequences that begin
+with x ~ 1. Half of these have print (r.z) before y ~ 1 and thus violate program
+order. Half also have print (x,y) before z ~ 1 and also violate program order.
+Only 1/4 of the 120 sequences, or 30, are valid. Another 30 valid sequences are
+possible starting with y ~ 1 and another 30 can begin with z ~ 1, for a total of 90
+valid execution sequences. Four of these are shown in Fig. 7-7.
+In Fig. 7-7(a), the three processes are run in order, first Ph then P2, then P3.
+The other three examples demonstrate different, but equally valid, interleavings of
+the statements in time. Each of the three processes prints two variables. Since the
+only values each variable can take on are the initial value (0), or the assigned
+value (1), each process produces a 2-bit string. The numbers after Prints are the
+actual outputs that appear on the output device.
+If weconcatenate the output of PI, P2, and P3 in that order, we get a 6-bit
+string that characterizes a particular interleaving of statements. This is the string
+listed as the Signature in Fig. 7-7. Below we will characterize each ordering by
+its signature rather than by its printout.
+Not all 64 signature patterns are allowed. As a trivial example, 000000 is not
+permitted, because that would imply that the print statements ran before the
+assignment statements, violating the requirement that statements are executed in
+284
